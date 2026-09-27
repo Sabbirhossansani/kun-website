@@ -195,8 +195,6 @@ export default function Home() {
           if (checkoutCartItems) {
             setCartItems([]);
           }
-          setQuickOrderProduct(null);
-          setCheckoutCartItems(null);
           fetchProducts();
         }}
       />

@@ -257,8 +257,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           if (checkoutCartItems) {
             setCartItems([]);
           }
-          setShowOrderModal(false);
-          setCheckoutCartItems(null);
         }}
       />
 
