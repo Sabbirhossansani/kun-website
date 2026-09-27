@@ -3,7 +3,7 @@ import { getOrders, createOrder } from '@/lib/data';
 
 export async function GET() {
   try {
-    const orders = getOrders();
+    const orders = await getOrders();
     return NextResponse.json(orders);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     const subtotal = items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0);
     const totalAmount = subtotal + deliveryFee;
 
-    const newOrder = createOrder({
+    const newOrder = await createOrder({
       customerName,
       phone,
       address,

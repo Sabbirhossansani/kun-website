@@ -3,7 +3,7 @@ import { getProducts, addProduct } from '@/lib/data';
 
 export async function GET() {
   try {
-    const products = getProducts();
+    const products = await getProducts();
     return NextResponse.json(products);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title, price, and category are required' }, { status: 400 });
     }
 
-    const newProduct = addProduct({
+    const newProduct = await addProduct({
       title,
       price: Number(price),
       originalPrice: originalPrice ? Number(originalPrice) : undefined,

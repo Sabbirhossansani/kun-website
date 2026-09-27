@@ -1,9 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import { supabase } from './supabase';
 
 export interface ProductVariant {
   name: string;
-  options: string[]; // e.g. ["18K Gold", "Silver", "Rose Gold"] or ["Size 6", "Size 7"]
+  options: string[];
 }
 
 export interface Product {
@@ -51,7 +52,6 @@ const productsFile = path.join(dataDir, 'products.json');
 const ordersFile = path.join(dataDir, 'orders.json');
 const authFile = path.join(dataDir, 'auth.json');
 
-// Ensure directory and initial files exist
 function ensureDataFiles() {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -71,9 +71,7 @@ function ensureDataFiles() {
         "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80"
       ],
       inStock: true,
-      variants: [
-        { name: "Color", options: ["18K Gold", "Silver"] }
-      ],
+      variants: [{ name: "Color", options: ["18K Gold", "Silver"] }],
       featured: false,
       createdAt: new Date().toISOString()
     },
@@ -85,13 +83,9 @@ function ensureDataFiles() {
       originalPrice: 990,
       category: "Bracelets",
       description: "💍 Crafted for everyday elegance! Waterproof & sweatproof minimalist herringbone chain bracelet. Perfect for stacking or wearing solo.",
-      images: [
-        "https://images.unsplash.com/photo-1611591475155-4282faa7c2e7?auto=format&fit=crop&w=800&q=80"
-      ],
+      images: ["https://images.unsplash.com/photo-1611591475155-4282faa7c2e7?auto=format&fit=crop&w=800&q=80"],
       inStock: true,
-      variants: [
-        { name: "Finish", options: ["Glossy Gold", "Platinum Silver"] }
-      ],
+      variants: [{ name: "Finish", options: ["Glossy Gold", "Platinum Silver"] }],
       featured: false,
       createdAt: new Date().toISOString()
     },
@@ -103,13 +97,9 @@ function ensureDataFiles() {
       originalPrice: 850,
       category: "Rings",
       description: "✨ High-grade CZ crystal ring with anti-tarnish protective coating. Non-fading, rustproof, and comfortable for daily wear.",
-      images: [
-        "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80"
-      ],
+      images: ["https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80"],
       inStock: true,
-      variants: [
-        { name: "Ring Size", options: ["Adjustable Size", "Size 6", "Size 7", "Size 8"] }
-      ],
+      variants: [{ name: "Ring Size", options: ["Adjustable Size", "Size 6", "Size 7", "Size 8"] }],
       featured: false,
       createdAt: new Date().toISOString()
     },
@@ -121,13 +111,9 @@ function ensureDataFiles() {
       originalPrice: 790,
       category: "Earrings",
       description: "🌸 Elegant freshwater pearl drop earrings. Anti-tarnish & 100% waterproof for rain, shower & everyday wear.",
-      images: [
-        "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80"
-      ],
+      images: ["https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80"],
       inStock: true,
-      variants: [
-        { name: "Metal", options: ["18K Gold Plated", "Silver Plated"] }
-      ],
+      variants: [{ name: "Metal", options: ["18K Gold Plated", "Silver Plated"] }],
       featured: false,
       createdAt: new Date().toISOString()
     }
@@ -138,8 +124,7 @@ function ensureDataFiles() {
   }
 
   if (!fs.existsSync(ordersFile)) {
-    const initialOrders: Order[] = [];
-    fs.writeFileSync(ordersFile, JSON.stringify(initialOrders, null, 2), 'utf-8');
+    fs.writeFileSync(ordersFile, JSON.stringify([], null, 2), 'utf-8');
   }
 
   if (!fs.existsSync(authFile)) {
@@ -163,7 +148,17 @@ export function savePasscode(passcode: string): void {
   fs.writeFileSync(authFile, JSON.stringify({ passcode }, null, 2), 'utf-8');
 }
 
-export function getProducts(): Product[] {
+// Products Helper Functions (Supports Supabase + File Fallback)
+export async function getProducts(): Promise<Product[]> {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('products').select('*').order('createdAt', { ascending: false });
+      if (!error && data && data.length > 0) return data as Product[];
+    } catch (e) {
+      console.error('Supabase fetch error:', e);
+    }
+  }
+
   ensureDataFiles();
   try {
     const content = fs.readFileSync(productsFile, 'utf-8');
@@ -173,18 +168,25 @@ export function getProducts(): Product[] {
   }
 }
 
-export function getProductById(id: string): Product | null {
-  const products = getProducts();
+export async function getProductById(id: string): Promise<Product | null> {
+  const products = await getProducts();
   return products.find(p => p.id === id || p.slug === id) || null;
 }
 
-export function saveProducts(products: Product[]): void {
+export async function saveProducts(products: Product[]): Promise<void> {
+  if (supabase) {
+    try {
+      await supabase.from('products').upsert(products);
+    } catch (e) {
+      console.error('Supabase save error:', e);
+    }
+  }
   ensureDataFiles();
   fs.writeFileSync(productsFile, JSON.stringify(products, null, 2), 'utf-8');
 }
 
-export function addProduct(productData: Omit<Product, 'id' | 'createdAt' | 'slug'>): Product {
-  const products = getProducts();
+export async function addProduct(productData: Omit<Product, 'id' | 'createdAt' | 'slug'>): Promise<Product> {
+  const products = await getProducts();
   const id = `kun-${Date.now().toString(36)}`;
   const slug = productData.title
     .toLowerCase()
@@ -198,32 +200,71 @@ export function addProduct(productData: Omit<Product, 'id' | 'createdAt' | 'slug
     createdAt: new Date().toISOString()
   };
 
+  if (supabase) {
+    try {
+      await supabase.from('products').insert([newProduct]);
+    } catch (e) {
+      console.error('Supabase insert product error:', e);
+    }
+  }
+
   products.unshift(newProduct);
-  saveProducts(products);
+  ensureDataFiles();
+  fs.writeFileSync(productsFile, JSON.stringify(products, null, 2), 'utf-8');
   return newProduct;
 }
 
-export function updateProduct(id: string, updates: Partial<Product>): Product | null {
-  const products = getProducts();
+export async function updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
+  const products = await getProducts();
   const index = products.findIndex(p => p.id === id);
   if (index === -1) return null;
 
-  products[index] = { ...products[index], ...updates };
-  saveProducts(products);
-  return products[index];
+  const updated = { ...products[index], ...updates };
+
+  if (supabase) {
+    try {
+      await supabase.from('products').update(updates).eq('id', id);
+    } catch (e) {
+      console.error('Supabase update product error:', e);
+    }
+  }
+
+  products[index] = updated;
+  ensureDataFiles();
+  fs.writeFileSync(productsFile, JSON.stringify(products, null, 2), 'utf-8');
+  return updated;
 }
 
-export function deleteProduct(id: string): boolean {
-  let products = getProducts();
+export async function deleteProduct(id: string): Promise<boolean> {
+  let products = await getProducts();
   const initialLen = products.length;
   products = products.filter(p => p.id !== id);
   if (products.length === initialLen) return false;
-  saveProducts(products);
+
+  if (supabase) {
+    try {
+      await supabase.from('products').delete().eq('id', id);
+    } catch (e) {
+      console.error('Supabase delete product error:', e);
+    }
+  }
+
+  ensureDataFiles();
+  fs.writeFileSync(productsFile, JSON.stringify(products, null, 2), 'utf-8');
   return true;
 }
 
-// Orders Management
-export function getOrders(): Order[] {
+// Orders Management (Supports Supabase + File Fallback)
+export async function getOrders(): Promise<Order[]> {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('orders').select('*').order('createdAt', { ascending: false });
+      if (!error && data) return data as Order[];
+    } catch (e) {
+      console.error('Supabase fetch orders error:', e);
+    }
+  }
+
   ensureDataFiles();
   try {
     const content = fs.readFileSync(ordersFile, 'utf-8');
@@ -233,13 +274,8 @@ export function getOrders(): Order[] {
   }
 }
 
-export function saveOrders(orders: Order[]): void {
-  ensureDataFiles();
-  fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), 'utf-8');
-}
-
-export function createOrder(orderData: Omit<Order, 'id' | 'orderNumber' | 'createdAt' | 'status'>): Order {
-  const orders = getOrders();
+export async function createOrder(orderData: Omit<Order, 'id' | 'orderNumber' | 'createdAt' | 'status'>): Promise<Order> {
+  const orders = await getOrders();
   const id = `ord-${Date.now().toString(36)}`;
   const orderNumber = `KUN-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -251,26 +287,55 @@ export function createOrder(orderData: Omit<Order, 'id' | 'orderNumber' | 'creat
     createdAt: new Date().toISOString()
   };
 
+  if (supabase) {
+    try {
+      await supabase.from('orders').insert([newOrder]);
+    } catch (e) {
+      console.error('Supabase insert order error:', e);
+    }
+  }
+
   orders.unshift(newOrder);
-  saveOrders(orders);
+  ensureDataFiles();
+  fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), 'utf-8');
   return newOrder;
 }
 
-export function updateOrderStatus(id: string, status: Order['status']): Order | null {
-  const orders = getOrders();
+export async function updateOrderStatus(id: string, status: Order['status']): Promise<Order | null> {
+  const orders = await getOrders();
   const index = orders.findIndex(o => o.id === id);
   if (index === -1) return null;
 
   orders[index].status = status;
-  saveOrders(orders);
+
+  if (supabase) {
+    try {
+      await supabase.from('orders').update({ status }).eq('id', id);
+    } catch (e) {
+      console.error('Supabase update order status error:', e);
+    }
+  }
+
+  ensureDataFiles();
+  fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), 'utf-8');
   return orders[index];
 }
 
-export function deleteOrder(id: string): boolean {
-  let orders = getOrders();
+export async function deleteOrder(id: string): Promise<boolean> {
+  let orders = await getOrders();
   const initialLen = orders.length;
   orders = orders.filter(o => o.id !== id);
   if (orders.length === initialLen) return false;
-  saveOrders(orders);
+
+  if (supabase) {
+    try {
+      await supabase.from('orders').delete().eq('id', id);
+    } catch (e) {
+      console.error('Supabase delete order error:', e);
+    }
+  }
+
+  ensureDataFiles();
+  fs.writeFileSync(ordersFile, JSON.stringify(orders, null, 2), 'utf-8');
   return true;
 }
