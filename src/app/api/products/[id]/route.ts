@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getProductById, updateProduct, deleteProduct } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const product = await getProductById(params.id);

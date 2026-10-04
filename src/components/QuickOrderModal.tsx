@@ -479,7 +479,7 @@ export default function QuickOrderModal({ product, cartItems, onClose, onOrderCr
                     Please Send Money (<b>৳{totalAmount}</b>) to official {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Number:
                   </p>
                   <div className="bg-white p-2 rounded-lg border border-pink-200 font-mono font-bold text-sm text-pink-600 flex items-center justify-between">
-                    <span>01858931317</span>
+                    <span>01736528481</span>
                     <span className="text-[10px] font-sans bg-pink-100 text-pink-800 px-2 py-0.5 rounded">Personal/Send Money</span>
                   </div>
                   <div>
