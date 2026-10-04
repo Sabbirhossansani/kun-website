@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { updateOrderStatus, deleteOrder } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     const { status } = await request.json();

@@ -16,8 +16,8 @@ export default function AdminOverviewPage() {
     setLoading(true);
     try {
       const [prodRes, ordRes] = await Promise.all([
-        fetch('/api/products'),
-        fetch('/api/orders')
+        fetch(`/api/products?t=${Date.now()}`, { cache: 'no-store' }),
+        fetch(`/api/orders?t=${Date.now()}`, { cache: 'no-store' })
       ]);
 
       if (prodRes.ok) setProducts(await prodRes.json());

@@ -10,9 +10,12 @@ import Footer from '@/components/Footer';
 import { Product } from '@/lib/data';
 import { Sparkles, Package, RefreshCw } from 'lucide-react';
 
+// Client-side module cache for instant home page rendering and zero-lag back navigation
+let cachedHomeProducts: Product[] = [];
+
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(cachedHomeProducts);
+  const [loading, setLoading] = useState(cachedHomeProducts.length === 0);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -24,13 +27,16 @@ export default function Home() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
-  // Load Products from API
+  // Load Products from API (Background refresh if already cached)
   const fetchProducts = async () => {
-    setLoading(true);
+    if (cachedHomeProducts.length === 0) {
+      setLoading(true);
+    }
     try {
-      const res = await fetch('/api/products');
+      const res = await fetch(`/api/products?t=${Date.now()}`);
       if (res.ok) {
-        const data = await res.json();
+        const data: Product[] = await res.json();
+        cachedHomeProducts = data;
         setProducts(data);
       }
     } catch (error) {
