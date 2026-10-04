@@ -59,70 +59,10 @@ function ensureDataFiles() {
     fs.mkdirSync(dataDir, { recursive: true });
   }
 
-  const initialProducts: Product[] = [
-    {
-      id: "kun-j01",
-      title: "KUN Anti-Tarnish Golden Butterfly Pendant Necklace",
-      slug: "kun-anti-tarnish-golden-butterfly-pendant-necklace",
-      price: 890,
-      originalPrice: 1200,
-      category: "Necklaces",
-      description: "✨ Shine that never fades! Premium 18K Gold Plated Stainless Steel Butterfly Pendant. 100% Anti-tarnish, waterproof & hypoallergenic for everyday elegance.",
-      images: [
-        "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=800&q=80"
-      ],
-      inStock: true,
-      variants: [{ name: "Color", options: ["18K Gold", "Silver"] }],
-      featured: false,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: "kun-j02",
-      title: "KUN Waterproof Minimalist Snake Chain Bracelet",
-      slug: "kun-waterproof-minimalist-snake-chain-bracelet",
-      price: 750,
-      originalPrice: 990,
-      category: "Bracelets",
-      description: "💍 Crafted for everyday elegance! Waterproof & sweatproof minimalist herringbone chain bracelet. Perfect for stacking or wearing solo.",
-      images: ["https://images.unsplash.com/photo-1611591475155-4282faa7c2e7?auto=format&fit=crop&w=800&q=80"],
-      inStock: true,
-      variants: [{ name: "Finish", options: ["Glossy Gold", "Platinum Silver"] }],
-      featured: false,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: "kun-j03",
-      title: "KUN Anti-Tarnish Cubic Zirconia Solitaire Ring",
-      slug: "kun-anti-tarnish-cubic-zirconia-solitaire-ring",
-      price: 650,
-      originalPrice: 850,
-      category: "Rings",
-      description: "✨ High-grade CZ crystal ring with anti-tarnish protective coating. Non-fading, rustproof, and comfortable for daily wear.",
-      images: ["https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=800&q=80"],
-      inStock: true,
-      variants: [{ name: "Ring Size", options: ["Adjustable Size", "Size 6", "Size 7", "Size 8"] }],
-      featured: false,
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: "kun-j04",
-      title: "KUN Waterproof Pearl Drop Huggie Hoop Earrings",
-      slug: "kun-waterproof-pearl-drop-huggie-hoop-earrings",
-      price: 590,
-      originalPrice: 790,
-      category: "Earrings",
-      description: "🌸 Elegant freshwater pearl drop earrings. Anti-tarnish & 100% waterproof for rain, shower & everyday wear.",
-      images: ["https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=800&q=80"],
-      inStock: true,
-      variants: [{ name: "Metal", options: ["18K Gold Plated", "Silver Plated"] }],
-      featured: false,
-      createdAt: new Date().toISOString()
-    }
-  ];
+  const initialProducts: Product[] = [];
 
   if (!fs.existsSync(productsFile)) {
-    fs.writeFileSync(productsFile, JSON.stringify(initialProducts, null, 2), 'utf-8');
+    fs.writeFileSync(productsFile, JSON.stringify([], null, 2), 'utf-8');
   }
 
   if (!fs.existsSync(ordersFile)) {

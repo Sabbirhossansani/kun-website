@@ -6,24 +6,35 @@ import AdminAuthGuard from '@/components/AdminAuthGuard';
 import { Order } from '@/lib/data';
 import { Phone, MapPin, Calendar, Truck, Search, RefreshCw, MessageSquare, Trash2 } from 'lucide-react';
 
+// Module level cache for instant tab switching
+let cachedAdminOrdersList: Order[] = [];
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kun_cached_orders');
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return cachedAdminOrdersList;
+  });
+
+  const [loading, setLoading] = useState(false);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchOrders = async () => {
-    setLoading(true);
     try {
       const res = await fetch(`/api/orders?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
-        const data = await res.json();
+        const data: Order[] = await res.json();
+        cachedAdminOrdersList = data;
         setOrders(data);
+        localStorage.setItem('kun_cached_orders', JSON.stringify(data));
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -127,7 +138,12 @@ export default function AdminOrdersPage() {
 
           {/* Orders Card / Table view */}
           <div className="space-y-4">
-            {filteredOrders.length === 0 ? (
+            {loading && orders.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 text-gray-500 text-xs font-medium flex items-center justify-center gap-2">
+                <RefreshCw size={16} className="animate-spin text-pink-500" />
+                <span>Loading customer orders...</span>
+              </div>
+            ) : filteredOrders.length === 0 ? (
               <div className="bg-white rounded-2xl p-12 text-center border border-gray-200 text-gray-400 text-xs font-medium">
                 No customer orders found.
               </div>

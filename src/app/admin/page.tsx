@@ -7,25 +7,54 @@ import Link from 'next/link';
 import { Product, Order } from '@/lib/data';
 import { Package, ShoppingBag, DollarSign, Clock, ArrowRight, Plus, RefreshCw } from 'lucide-react';
 
+// Module level cache for instant tab switching in Admin Overview
+let cachedAdminOverviewProducts: Product[] = [];
+let cachedAdminOverviewOrders: Order[] = [];
+
 export default function AdminOverviewPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kun_cached_products');
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return cachedAdminOverviewProducts;
+  });
+
+  const [orders, setOrders] = useState<Order[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kun_cached_orders');
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return cachedAdminOverviewOrders;
+  });
+
+  const [loading, setLoading] = useState(false);
 
   const loadData = async () => {
-    setLoading(true);
     try {
       const [prodRes, ordRes] = await Promise.all([
         fetch(`/api/products?t=${Date.now()}`, { cache: 'no-store' }),
         fetch(`/api/orders?t=${Date.now()}`, { cache: 'no-store' })
       ]);
 
-      if (prodRes.ok) setProducts(await prodRes.json());
-      if (ordRes.ok) setOrders(await ordRes.json());
+      if (prodRes.ok) {
+        const prodData = await prodRes.json();
+        cachedAdminOverviewProducts = prodData;
+        setProducts(prodData);
+        localStorage.setItem('kun_cached_products', JSON.stringify(prodData));
+      }
+      if (ordRes.ok) {
+        const ordData = await ordRes.json();
+        cachedAdminOverviewOrders = ordData;
+        setOrders(ordData);
+        localStorage.setItem('kun_cached_orders', JSON.stringify(ordData));
+      }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -82,7 +111,7 @@ export default function AdminOverviewPage() {
               </div>
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Total Products</span>
-                <h3 className="text-2xl font-extrabold text-slate-900">{products.length}</h3>
+                <h3 className="text-2xl font-extrabold text-slate-900">{loading && products.length === 0 ? '...' : products.length}</h3>
               </div>
             </div>
 
@@ -92,7 +121,7 @@ export default function AdminOverviewPage() {
               </div>
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Total Orders</span>
-                <h3 className="text-2xl font-extrabold text-slate-900">{orders.length}</h3>
+                <h3 className="text-2xl font-extrabold text-slate-900">{loading && orders.length === 0 ? '...' : orders.length}</h3>
               </div>
             </div>
 
@@ -102,7 +131,7 @@ export default function AdminOverviewPage() {
               </div>
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Pending Orders</span>
-                <h3 className="text-2xl font-extrabold text-amber-600">{pendingOrders}</h3>
+                <h3 className="text-2xl font-extrabold text-amber-600">{loading && orders.length === 0 ? '...' : pendingOrders}</h3>
               </div>
             </div>
 
@@ -112,7 +141,7 @@ export default function AdminOverviewPage() {
               </div>
               <div>
                 <span className="text-xs font-semibold text-gray-500 uppercase">Total Sales</span>
-                <h3 className="text-2xl font-extrabold text-emerald-600">৳{totalRevenue.toLocaleString()}</h3>
+                <h3 className="text-2xl font-extrabold text-emerald-600">৳{loading && orders.length === 0 ? '0' : totalRevenue.toLocaleString()}</h3>
               </div>
             </div>
 
@@ -135,7 +164,12 @@ export default function AdminOverviewPage() {
             </div>
 
             <div className="overflow-x-auto">
-              {orders.length === 0 ? (
+              {loading && orders.length === 0 ? (
+                <div className="p-12 text-center text-gray-500 text-xs font-medium flex items-center justify-center gap-2">
+                  <RefreshCw size={16} className="animate-spin text-pink-500" />
+                  <span>Loading dashboard data...</span>
+                </div>
+              ) : orders.length === 0 ? (
                 <div className="p-12 text-center text-gray-400 text-xs font-medium">
                   No orders placed yet.
                 </div>

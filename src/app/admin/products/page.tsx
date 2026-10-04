@@ -4,11 +4,23 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import AdminAuthGuard from '@/components/AdminAuthGuard';
 import { Product } from '@/lib/data';
-import { Plus, Trash2, Edit, Upload, X, Search } from 'lucide-react';
+import { Plus, Trash2, Edit, Upload, X, Search, RefreshCw } from 'lucide-react';
+
+// Module level cache for instant tab switching
+let cachedAdminProductsList: Product[] = [];
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('kun_cached_products');
+      if (saved) {
+        try { return JSON.parse(saved); } catch {}
+      }
+    }
+    return cachedAdminProductsList;
+  });
+
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal Form state for Add/Edit
@@ -35,17 +47,16 @@ export default function AdminProductsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchProducts = async () => {
-    setLoading(true);
     try {
       const res = await fetch(`/api/products?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
-        const data = await res.json();
+        const data: Product[] = await res.json();
+        cachedAdminProductsList = data;
         setProducts(data);
+        localStorage.setItem('kun_cached_products', JSON.stringify(data));
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -229,7 +240,12 @@ export default function AdminProductsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              {filtered.length === 0 ? (
+              {loading && products.length === 0 ? (
+                <div className="p-12 text-center text-gray-500 text-xs font-medium flex items-center justify-center gap-2">
+                  <RefreshCw size={16} className="animate-spin text-pink-500" />
+                  <span>Loading products catalog...</span>
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="p-12 text-center text-gray-400 text-xs font-medium">
                   No products found. Click "Add New Product" to create your first item.
                 </div>
