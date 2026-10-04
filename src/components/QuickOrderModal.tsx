@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Product } from '@/lib/data';
 import { CartItem } from '@/components/CartDrawer';
-import { X, CheckCircle, Truck, Phone, MapPin, User, ShoppingBag } from 'lucide-react';
+import { X, CheckCircle, Truck, Phone, MapPin, User, ShoppingBag, CreditCard, Wallet } from 'lucide-react';
 
 interface QuickOrderModalProps {
   product?: Product | null;
@@ -29,6 +29,8 @@ export default function QuickOrderModal({ product, cartItems, onClose, onOrderCr
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [deliveryZone, setDeliveryZone] = useState<'inside_dhaka' | 'outside_dhaka'>('inside_dhaka');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bkash' | 'nagad' | 'card'>('cod');
+  const [transactionId, setTransactionId] = useState('');
   const [notes, setNotes] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
@@ -84,6 +86,8 @@ export default function QuickOrderModal({ product, cartItems, onClose, onOrderCr
         phone: phone.trim(),
         address: address.trim(),
         deliveryZone,
+        paymentMethod,
+        transactionId: transactionId.trim(),
         notes: notes.trim(),
         items: itemsPayload
       };
@@ -362,6 +366,149 @@ export default function QuickOrderModal({ product, cartItems, onClose, onOrderCr
                   </label>
                 </div>
               </div>
+
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
+                  <Wallet size={14} className="text-amber-500" />
+                  <span>Payment Method *</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <label
+                    className={`p-2.5 rounded-xl border text-xs font-semibold cursor-pointer flex items-center gap-2 transition-all ${
+                      paymentMethod === 'cod'
+                        ? 'border-amber-500 bg-amber-50 text-amber-900 ring-2 ring-amber-500/20'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className="sr-only"
+                    />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-amber-500 flex items-center justify-center shrink-0">
+                      {paymentMethod === 'cod' && <div className="w-2 h-2 bg-amber-500 rounded-full" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900">Cash on Delivery</span>
+                      <span className="text-[10px] text-gray-500 font-normal">Pay upon receipt</span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-2.5 rounded-xl border text-xs font-semibold cursor-pointer flex items-center gap-2 transition-all ${
+                      paymentMethod === 'bkash'
+                        ? 'border-pink-500 bg-pink-50 text-pink-900 ring-2 ring-pink-500/20'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="bkash"
+                      checked={paymentMethod === 'bkash'}
+                      onChange={() => setPaymentMethod('bkash')}
+                      className="sr-only"
+                    />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-pink-500 flex items-center justify-center shrink-0">
+                      {paymentMethod === 'bkash' && <div className="w-2 h-2 bg-pink-500 rounded-full" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-pink-700">bKash</span>
+                      <span className="text-[10px] text-gray-500 font-normal">Send Money / Pay</span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-2.5 rounded-xl border text-xs font-semibold cursor-pointer flex items-center gap-2 transition-all ${
+                      paymentMethod === 'nagad'
+                        ? 'border-orange-500 bg-orange-50 text-orange-900 ring-2 ring-orange-500/20'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="nagad"
+                      checked={paymentMethod === 'nagad'}
+                      onChange={() => setPaymentMethod('nagad')}
+                      className="sr-only"
+                    />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-orange-500 flex items-center justify-center shrink-0">
+                      {paymentMethod === 'nagad' && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-orange-700">Nagad</span>
+                      <span className="text-[10px] text-gray-500 font-normal">Send Money / Pay</span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-2.5 rounded-xl border text-xs font-semibold cursor-pointer flex items-center gap-2 transition-all ${
+                      paymentMethod === 'card'
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-500/20'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={() => setPaymentMethod('card')}
+                      className="sr-only"
+                    />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-indigo-500 flex items-center justify-center shrink-0">
+                      {paymentMethod === 'card' && <div className="w-2 h-2 bg-indigo-500 rounded-full" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-indigo-700">Credit / Debit Card</span>
+                      <span className="text-[10px] text-gray-500 font-normal">Online Payment</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* bKash / Nagad Details Box */}
+              {(paymentMethod === 'bkash' || paymentMethod === 'nagad') && (
+                <div className="bg-pink-50/70 border border-pink-200 rounded-xl p-3 text-xs space-y-2">
+                  <p className="font-bold text-slate-900">
+                    Please Send Money (<b>৳{totalAmount}</b>) to official {paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Number:
+                  </p>
+                  <div className="bg-white p-2 rounded-lg border border-pink-200 font-mono font-bold text-sm text-pink-600 flex items-center justify-between">
+                    <span>01858931317</span>
+                    <span className="text-[10px] font-sans bg-pink-100 text-pink-800 px-2 py-0.5 rounded">Personal/Send Money</span>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Transaction ID (TrxID) / bKash or Nagad Sender Number:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter TrxID e.g. 9J87X..."
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-pink-300 rounded-lg text-xs focus:outline-none focus:border-pink-500 bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Card Details Box */}
+              {paymentMethod === 'card' && (
+                <div className="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 text-xs space-y-1 text-indigo-900">
+                  <p className="font-bold flex items-center gap-1">
+                    <CreditCard size={14} className="text-indigo-600" />
+                    <span>Online Credit / Debit Card Selected</span>
+                  </p>
+                  <p className="text-[11px] text-indigo-700 leading-relaxed">
+                    You can pay via Visa, MasterCard or Net Banking. After placing the order, you will receive payment link & invoice via WhatsApp.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}

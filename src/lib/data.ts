@@ -42,6 +42,8 @@ export interface Order {
   items: OrderItem[];
   subtotal: number;
   totalAmount: number;
+  paymentMethod?: 'cod' | 'bkash' | 'nagad' | 'card';
+  transactionId?: string;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
   notes?: string;
   createdAt: string;

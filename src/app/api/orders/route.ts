@@ -13,7 +13,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { customerName, phone, address, deliveryZone, items, notes } = body;
+    const { customerName, phone, address, deliveryZone, items, notes, paymentMethod, transactionId } = body;
 
     if (!customerName || !phone || !address || !items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Missing required customer or item information' }, { status: 400 });
@@ -32,6 +32,8 @@ export async function POST(request: Request) {
       items,
       subtotal,
       totalAmount,
+      paymentMethod: paymentMethod || 'cod',
+      transactionId,
       notes
     });
 
